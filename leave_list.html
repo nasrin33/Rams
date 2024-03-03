@@ -1,0 +1,278 @@
+{{extend 'layout_new.html'}} {{block header}} 
+{{from datetime import datetime,timedelta}} 
+{{startdatetime = datetime.now() + timedelta(-30)}}
+{{startdate = str(startdatetime.date())}} 
+{{enddate = str(datetime.now().date())}} 
+{{fulldate = startdate + " to " + enddate}}
+
+<style>
+  .top-bar-bg {
+    background-color: #3977a1;
+  }
+
+  .nav {
+    margin: 0;
+  }
+
+  .nav li a {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 13px 20px;
+  }
+
+  .nav-tabs > li > a {
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  .nav > .active > a,
+  .nav > li > a:hover,
+  .nav > li > a:focus {
+    background-color: #245461 !important;
+    color: #ffffff !important;
+  }
+
+  .tab-content .card {
+    margin-top: 10px;
+  }
+
+  .datatable-head-filter {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media only screen and (max-width: 768px) {
+    .datatable-head-filter {
+      flex-direction: column;
+    }
+    .nav-tabs > li {
+      width: 100%;
+      float: unset;
+      text-align: center;
+    }
+  }
+</style>
+
+{{ if msge: }}
+<div
+  id="message"
+  class="alert alert-warning"
+  role="alert"
+  style="
+    z-index: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffe2a2;
+    color: #524125;
+  "
+>
+  {{=msge}}
+</div>
+{{ pass }}
+
+<div id="page-title">
+  <h2>Leave List</h2>
+</div>
+
+<!-- In Page Navigation Bar -->
+
+<div class="tab-content" style="margin-top: 10px">
+  <div
+    id="leave_type">
+        <table
+          id="device-status2"
+          class="table table-striped leave-table dt-responsive nowrap"
+          cellspacing="0"
+          width="100%"
+        >
+          <thead>
+            <tr>
+              <th></th>
+              <th>User Name</th>
+              <th>Leave Type</th>
+              <th>Date</th>
+              <th>Apply Date</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{for leave in leave_list:}}
+            <tr>
+              <td></td>
+              <td>{{=leave[6]}}</td>
+              <td>{{=leave[7]}}</td>
+              <td>{{=leave[3]}}</td>
+              <td>{{=leave[5]}}</td>
+              <td>{{=leave[4]}}</td>
+              <td>{{=leave[8]}}</td>
+
+              <td>
+                <button type="button" class="edit-button btn btn-primary btn-sm" onclick="edit_leave({{=leave[0]}})">Edit</button>
+              </td>
+            </tr>
+            {{pass}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+
+<!-- field show or hide based on assign type selection -->
+<script>
+  function handleSelectionChange() {
+    var selection = document.getElementById("cassignType").value;
+    var departmentField = document.getElementById("department_row");
+    var designationField = document.getElementById("designation_row");
+    var userField = document.getElementById("users_row");
+
+    // Check the selected value and hide/show the target field accordingly
+    if (selection === "0") {
+      departmentField.style.display = "block";
+      designationField.style.display = "none";
+      userField.style.display = "none";
+    } else if (selection === "1") {
+      departmentField.style.display = "none";
+      designationField.style.display = "block";
+      userField.style.display = "none";
+    } else if (selection === "2") {
+      departmentField.style.display = "none";
+      designationField.style.display = "none";
+      userField.style.display = "block";
+    } else {
+      departmentField.style.display = "none";
+      designationField.style.display = "none";
+      userField.style.display = "none";
+    }
+  }
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $("#device-status2").DataTable({
+      responsive: true,
+      paging: true,
+      lengthMenu: [10, 25, 50, 75, 100],
+      // dom: 'lfBrtip',
+      dom: '<"datatable-head-filter"lBf><rtip>',
+      buttons: ["copy", "csv", "excel", "print"],
+      columnDefs: [
+        {
+          className: "control",
+          responsivePriority: 1,
+          orderable: false,
+          targets: 0,
+        },
+        {
+          responsivePriority: 2,
+          targets: 1,
+        },
+        {
+          responsivePriority: 3,
+          targets: -1,
+        },
+        {
+          responsivePriority: 4,
+          targets: -2,
+        },
+        {
+          responsivePriority: 5,
+          targets: -3,
+        },
+      ],
+      order: [2, "asc"],
+    });
+    $("#device-status").DataTable({
+      responsive: true,
+      paging: true,
+      lengthMenu: [10, 25, 50, 75, 100],
+      // dom: 'lfBrtip',
+      dom: '<"datatable-head-filter"lBf><rtip>',
+      buttons: ["copy", "csv", "excel", "print"],
+      responsive: {
+        details: {
+          type: "column",
+          target: "tr",
+        },
+      },
+      columnDefs: [
+        {
+          className: "control",
+          responsivePriority: 1,
+          orderable: false,
+          targets: 0,
+        },
+        {
+          responsivePriority: 2,
+          targets: 1,
+        },
+        {
+          responsivePriority: 3,
+          targets: -1,
+        },
+        {
+          responsivePriority: 4,
+          targets: -2,
+        },
+      ],
+      order: [1, "asc"],
+    });
+  });
+</script>
+
+<!-- Include jQuery -->
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script> -->
+
+<script>
+  //When the page has loaded.
+  $(document).ready(function () {
+    $("#message").delay(5000);
+    $("#message").fadeOut(1000);
+  });
+</script>
+
+<script type="text/javascript">
+  $(function () {
+    "use strict";
+    $(
+      "#leave_date_range, #holiday_date_range, #holiday_date_search, #leave_date_search"
+    ).daterangepicker({
+      startDate: "{{ =enddate }}",
+      endDate: "{{ =enddate }}",
+      opens: "left",
+      buttonClasses: ["btn btn-default"],
+      applyClass: "small bg-green",
+      cancelClass: "small ui-state-default",
+      format: "YYYY-MM-DD",
+      separator: " to ",
+      locale: {
+        format: "YYYY-MM-DD",
+        separator: " to ",
+      },
+      ranges: {
+        Today: [moment(), moment()],
+        Yesterday: [moment().subtract("days", 1), moment().subtract("days", 1)],
+        "Last 7 Days": [moment().subtract("days", 6), moment()],
+        "Last 30 Days": [moment().subtract("days", 29), moment()],
+        "This Month": [moment().startOf("month"), moment().endOf("month")],
+        "Last Month": [
+          moment().subtract("month", 1).startOf("month"),
+          moment().subtract("month", 1).endOf("month"),
+        ],
+      },
+    });
+  });
+</script>
+
+<script>
+
+  function edit_leave(id){
+      
+      window.location.href = '{{=URL('edit_leave')}}' + '?leave_id='+id;    
+  }
+</script>
+{{end}}

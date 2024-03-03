@@ -1,0 +1,216 @@
+{{extend 'layout_new.html'}} 
+{{block header}} 
+<style>
+  .top-bar-bg {
+    background-color: #3977a1;
+  }
+
+  .nav {
+    margin: 0;
+  }
+
+  .nav li a {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 13px 20px;
+  }
+
+  .nav-tabs > li > a {
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  .nav > .active > a,
+  .nav > li > a:hover,
+  .nav > li > a:focus {
+    background-color: #245461 !important;
+    color: #ffffff !important;
+  }
+
+  .tab-content .card {
+    margin-top: 10px;
+  }
+
+  .datatable-head-filter {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media only screen and (max-width: 768px) {
+    .datatable-head-filter {
+      flex-direction: column;
+    }
+    .nav-tabs > li {
+      width: 100%;
+      float: unset;
+      text-align: center;
+    }
+  }
+</style>
+
+{{ if msge: }}
+<div
+  id="message"
+  class="alert alert-warning"
+  role="alert"
+  style="
+    z-index: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffe2a2;
+    color: #524125;
+  "
+>
+  {{=msge}}
+</div>
+{{ pass }}
+
+
+
+
+      <p id="warning" style="color: red;text-align: center;"></p>
+
+<div id="page-title">
+  <h2>Add Leave</h2>
+</div>
+
+<div class="tab-content" style="margin-top: 10px">
+  <div>
+    <form action="" method="POST">
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <label class="form-label">User</label>
+          <select
+            data-live-search="true"
+            class="form-control"
+            name="user_id"
+            id="user_id"
+            required
+          >
+         {{for u in users:}}
+          <option value="{{=u[0]}}">{{=u[2]}}</option>
+          {{pass}}
+            </select>
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label">Leave Type</label>
+          <select
+            data-live-search="true"
+            class="form-control"
+            name="leave_type"
+            id="leave_type"
+          ></select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <label for="date-range">Leave date</label>
+          <input
+            type="date"
+            id="leave_date"
+            name="leave_date"
+            class="form-control"
+            value="{{=leave_date}}"
+            readonly
+          />
+        </div>
+        
+      </div>
+
+
+      <div class="form-group">
+        <div>
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="2">{{=leave_data[0][4]}}</textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <input
+            class="btn btn-primary"
+            value="Submit"
+            type="submit"
+            name="Submit_EL"
+          />
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  //When the page has loaded.
+  $(document).ready(function () {
+    $("#message").delay(5000);
+    $("#message").fadeOut(1000);
+  });
+</script>
+
+<script>
+    var leaveData;
+
+    $(document).ready(function () {
+          
+        // Fetch data onload with the default selected user
+        var rams_user_id= {{=leave_data[0][2]}}
+
+        $('#user_id').val(rams_user_id).change();
+                      
+        console.log(rams_user_id)
+
+        fetchData(rams_user_id);
+        
+        // Event listener for select change
+         $('#user_id').on('change', function () {
+            var selectedUserId = $(this).val();
+            fetchData(selectedUserId);
+        });
+
+        
+    });
+</script>
+
+<script>
+  function fetchData(selectedUserId) {
+      var leave_type_id= {{=leave_data[0][1]}}
+    $.ajax({
+            type: 'GET',
+            url: '{{=URL("get_edit_leave_type")}}' +"/"+ selectedUserId+"/"+ leave_type_id,
+            success: function (data) {
+                leaveData= data.leave_type
+                console.log(data.leave_type)
+                // Clear existing options in the select
+                $('#leave_type').empty();
+
+                for (var i = 0; i < data.leave_type.length; i++) {
+
+                    var optionValue = data.leave_type[i].id;
+                    var optionText = data.leave_type[i].name;
+
+                    var isSelected = optionValue === leave_type_id;
+
+
+                    $('#leave_type').append('<option value="' + optionValue + '"' + (isSelected ? ' selected' : '') + '>' + optionText + '</option>');
+
+                }
+
+              var selectedLeaveTypeId = $("#leave_type").val();
+
+            },
+            error: function (error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+            
+  }
+
+  
+  
+</script>
+
+
+{{end}}
