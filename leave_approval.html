@@ -1,0 +1,393 @@
+{{extend 'layout.html'}}
+{{from datetime import datetime,timedelta}} 
+{{startdatetime = datetime.now() + timedelta(-30)}}
+{{startdate = str(startdatetime.date())}} 
+{{enddate = str(datetime.now().date())}} 
+{{fulldate = startdate + " to " + enddate}}
+
+<style>
+  .top-bar-bg {
+    background-color: #3977a1;
+  }
+
+  .nav {
+    margin: 0;
+  }
+
+  .nav li a {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 13px 20px;
+  }
+
+  .nav-tabs > li > a {
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  .nav > .active > a,
+  .nav > li > a:hover,
+  .nav > li > a:focus {
+    background-color: #245461 !important;
+    color: #ffffff !important;
+  }
+
+  .tab-content .card {
+    margin-top: 10px;
+  }
+
+  .datatable-head-filter {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media only screen and (max-width: 768px) {
+    .datatable-head-filter {
+      flex-direction: column;
+    }
+    .nav-tabs > li {
+      width: 100%;
+      float: unset;
+      text-align: center;
+    }
+  }
+
+  .button-container form {
+    display: inline-block;
+    margin-right: 10px; /* Adjust as needed */
+}
+
+</style>
+
+{{ if msge: }}
+<div
+  id="message"
+  class="alert alert-warning"
+  role="alert"
+  style="
+    z-index: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffe2a2;
+    color: #524125;
+  "
+>
+  {{=msge}}
+</div>
+{{ pass }}
+
+<div id="page-title">
+  <h2>Leave Approval</h2>
+</div>
+
+<!-- In Page Navigation Bar -->
+
+<button class="mx-1" onclick="approveSelected()" >Approve All</button>
+<button class="mx-1" onclick="rejectSelected()" >Reject All</button>
+
+
+<div class="tab-content" style="margin-top: 10px">
+  <div
+    id="leave_type">
+        <table
+          id="device-status2"
+          class="table table-striped leave-table dt-responsive nowrap"
+          cellspacing="0"
+          width="100%"
+        >
+          <thead>
+            <tr>
+              <th></th>
+              <th><input type="checkbox" id="select-all"></th>
+              <th>User Name</th>
+              <th>Leave Type</th>
+              <th>Leave Date</th>
+              <th>Apply Date</th>
+              <th>Description</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{for leave in leave_list:}}
+            <tr>
+              <td></td>
+              <td><input type="checkbox" class="row-checkbox" name="selected_rows[]" value="{{=leave[0]}}"</td>
+              <td>{{=leave[6]}}</td>
+              <td>{{=leave[7]}}</td>
+              <td>{{=leave[3].strftime('%d-%m-%Y')}}</td>
+              <td>{{=leave[5].strftime('%d-%m-%Y %H:%M')}}</td>
+              <td>{{=leave[4]}}</td>
+
+              <td>
+               <div class="button-container">
+                      <form
+                        class="form-inline"
+                        enctype="multipart/form-data"
+                        method="post"
+                        action=""
+                      >
+                        <input type="hidden" value="{{=leave[0]}}" name="id" />
+                        <input
+                          class="form-control btn btn-primary btn-sm"
+                          onclick="return confirm('Are you sure to approve this data?')"
+                          type="submit"
+                          value="Approve"
+                          name="Submit_LA_apr"
+                        />
+                      </form>
+                    <form
+                      class="form-inline"
+                      enctype="multipart/form-data"
+                      method="post"
+                      action=""
+                    >
+                      <input type="hidden" value="{{=leave[0]}}" name="id" />
+                      <input
+                        class="form-control btn btn-danger btn-sm"
+                        onclick="return confirm('Are you sure to reject this data?')"
+                        type="submit"
+                        value="Reject"
+                        name="Submit_LA_rej"
+                      />
+                    </form>
+                </div>
+              </td>
+            </tr>
+            {{pass}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+<script>
+    $(document).ready(function() {
+        $("#select-all").change(function() {
+            $(".row-checkbox").prop('checked', $(this).prop('checked'));
+        });
+    });
+</script>
+
+
+<script>
+    function approveSelected() {
+        var selectedIds = [];
+        $(".row-checkbox:checked").each(function() {
+            selectedIds.push($(this).val());
+        });
+        // Now 'selectedIds' array contains all the selected IDs
+        console.log(selectedIds);
+        // You can perform further actions with the selected IDs here
+
+         // Check if any IDs are selected
+        if (selectedIds.length > 0) {
+            var data = {ids: selectedIds.toString() };
+            console.log (data)
+
+            // Send AJAX request to the server
+            $.ajax({
+                method: "post",
+                url: '{{=URL("post_selected_approved")}}',
+                data: data,
+                success: function(response) {
+                    console.log("working")
+                    // Handle the server response if needed
+                    alert('Selected Leaves are approved');
+                    location.reload();
+
+                },
+                error: function(error) {
+                    // Handle the error if needed
+                    console.error(error);
+                }
+            });
+        } else {
+            // No IDs selected, provide feedback to the user
+            alert('Please select at least one row.');
+        }
+    }
+    
+    function rejectSelected() {
+        var selectedIds = [];
+        $(".row-checkbox:checked").each(function() {
+            selectedIds.push($(this).val());
+        });
+        // Now 'selectedIds' array contains all the selected IDs
+        console.log(selectedIds);
+        // You can perform further actions with the selected IDs here
+
+         // Check if any IDs are selected
+        if (selectedIds.length > 0) {
+            var data = {ids: selectedIds.toString() };
+            console.log (data)
+
+            // Send AJAX request to the server
+            $.ajax({
+                method: "post",
+                url: '{{=URL("post_selected_rejected")}}',
+                data: data,
+                success: function(response) {
+                    console.log("working")
+                    // Handle the server response if needed
+                    alert('Selected Leaves are rejected');
+                    location.reload();
+                },
+                error: function(error) {
+                    // Handle the error if needed
+                    console.error(error);
+                }
+            });
+        } else {
+            // No IDs selected, provide feedback to the user
+            alert('Please select at least one row.');
+        }
+    }
+</script>
+
+<!-- field show or hide based on assign type selection -->
+<script>
+  function handleSelectionChange() {
+    var selection = document.getElementById("cassignType").value;
+    var departmentField = document.getElementById("department_row");
+    var designationField = document.getElementById("designation_row");
+    var userField = document.getElementById("users_row");
+
+    // Check the selected value and hide/show the target field accordingly
+    if (selection === "0") {
+      departmentField.style.display = "block";
+      designationField.style.display = "none";
+      userField.style.display = "none";
+    } else if (selection === "1") {
+      departmentField.style.display = "none";
+      designationField.style.display = "block";
+      userField.style.display = "none";
+    } else if (selection === "2") {
+      departmentField.style.display = "none";
+      designationField.style.display = "none";
+      userField.style.display = "block";
+    } else {
+      departmentField.style.display = "none";
+      designationField.style.display = "none";
+      userField.style.display = "none";
+    }
+  }
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $("#device-status2").DataTable({
+      responsive: true,
+      paging: true,
+      lengthMenu: [10, 25, 50, 75, 100],
+      // dom: 'lfBrtip',
+      dom: '<"datatable-head-filter"lBf><rtip>',
+      buttons: ["copy", "csv", "excel", "print"],
+      columnDefs: [
+        {
+          className: "control",
+          responsivePriority: 1,
+          orderable: false,
+          targets: 0,
+        },
+        {
+          responsivePriority: 2,
+          targets: 1,
+        },
+        {
+          responsivePriority: 3,
+          targets: -1,
+        },
+        {
+          responsivePriority: 4,
+          targets: -2,
+        },
+        {
+          responsivePriority: 5,
+          targets: -3,
+        },
+      ],
+      order: [2, "asc"],
+    });
+    $("#device-status").DataTable({
+      responsive: true,
+      paging: true,
+      lengthMenu: [10, 25, 50, 75, 100],
+      // dom: 'lfBrtip',
+      dom: '<"datatable-head-filter"lBf><rtip>',
+      buttons: ["copy", "csv", "excel", "print"],
+      responsive: {
+        details: {
+          type: "column",
+          target: "tr",
+        },
+      },
+      columnDefs: [
+        {
+          className: "control",
+          responsivePriority: 1,
+          orderable: false,
+          targets: 0,
+        },
+        {
+          responsivePriority: 2,
+          targets: 1,
+        },
+        {
+          responsivePriority: 3,
+          targets: -1,
+        },
+        {
+          responsivePriority: 4,
+          targets: -2,
+        },
+      ],
+      order: [1, "asc"],
+    });
+  });
+</script>
+
+<!-- Include jQuery -->
+<!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script> -->
+
+<script>
+  //When the page has loaded.
+  $(document).ready(function () {
+    $("#message").delay(5000);
+    $("#message").fadeOut(1000);
+  });
+</script>
+
+<script type="text/javascript">
+  $(function () {
+    "use strict";
+    $(
+      "#leave_date_range, #holiday_date_range, #holiday_date_search, #leave_date_search"
+    ).daterangepicker({
+      startDate: "{{ =enddate }}",
+      endDate: "{{ =enddate }}",
+      opens: "left",
+      buttonClasses: ["btn btn-default"],
+      applyClass: "small bg-green",
+      cancelClass: "small ui-state-default",
+      format: "YYYY-MM-DD",
+      separator: " to ",
+      locale: {
+        format: "YYYY-MM-DD",
+        separator: " to ",
+      },
+      ranges: {
+        Today: [moment(), moment()],
+        Yesterday: [moment().subtract("days", 1), moment().subtract("days", 1)],
+        "Last 7 Days": [moment().subtract("days", 6), moment()],
+        "Last 30 Days": [moment().subtract("days", 29), moment()],
+        "This Month": [moment().startOf("month"), moment().endOf("month")],
+        "Last Month": [
+          moment().subtract("month", 1).startOf("month"),
+          moment().subtract("month", 1).endOf("month"),
+        ],
+      },
+    });
+  });
+</script>
+

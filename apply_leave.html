@@ -1,0 +1,293 @@
+{{extend 'layout.html'}} 
+<style>
+  .top-bar-bg {
+    background-color: #3977a1;
+  }
+
+  .nav {
+    margin: 0;
+  }
+
+  .nav li a {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 13px 20px;
+  }
+
+  .nav-tabs > li > a {
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  .nav > .active > a,
+  .nav > li > a:hover,
+  .nav > li > a:focus {
+    background-color: #245461 !important;
+    color: #ffffff !important;
+  }
+
+  .tab-content .card {
+    margin-top: 10px;
+  }
+
+  .datatable-head-filter {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media only screen and (max-width: 768px) {
+    .datatable-head-filter {
+      flex-direction: column;
+    }
+    .nav-tabs > li {
+      width: 100%;
+      float: unset;
+      text-align: center;
+    }
+  }
+</style>
+
+{{ if msge: }}
+<div
+  id="message"
+  class="alert alert-warning"
+  role="alert"
+  style="
+    z-index: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ffe2a2;
+    color: #524125;
+  "
+>
+  {{=msge}}
+</div>
+{{ pass }}
+
+      <p id="warning" style="color: red;text-align: center;"></p>
+
+<div id="page-title">
+  <h2>Add Leave</h2>
+</div>
+
+<div class="tab-content" style="margin-top: 10px">
+  <div>
+    <form action="" method="POST">
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <label class="form-label">User</label>
+          <select
+            data-live-search="true"
+            class="form-control"
+            name="user_id"
+            id="user_id"
+            required
+          >
+         {{for u in users:}}
+          <option value="{{=u[0]}}">{{=u[2]}}</option>
+          {{pass}}
+            </select>
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label">Leave Type</label>
+          <select
+            data-live-search="true"
+            class="form-control"
+            name="leave_type"
+            id="leave_type"
+          ></select>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <label for="date-range">From date</label>
+          <input
+            type="date"
+            id="from_date"
+            name="from_date"
+            class="form-control"
+            value="{{=current_date}}"
+            required
+          />
+        </div>
+        <div class="col-sm-6">
+          <label for="date-range">To date</label>
+          <input
+            type="date"
+            id="to_date"
+            name="to_date"
+            class="form-control"
+            value="{{=current_date}}"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <label class="form-label">Leave Due</label>
+          <input
+            type="number"
+            id="leave_due"
+            name="leave_due"
+            class="form-control"
+            readonly
+          />
+        </div>
+
+        <div class="col-sm-6">
+          <label class="form-label">Leave Requested</label>
+          <input
+            type="number"
+            id="leave_requested"
+            name="leave_requested"
+            class="form-control"
+            readonly
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div>
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <input
+            class="btn btn-primary"
+            value="Submit"
+            type="submit"
+            name="Submit_AL"
+          />
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  //When the page has loaded.
+  $(document).ready(function () {
+    $("#message").delay(5000);
+    $("#message").fadeOut(1000);
+  });
+</script>
+
+<script>
+    var leaveData;
+
+    $(document).ready(function () {
+          
+        // Fetch data onload with the default selected user
+        var defaultUserId = $('#user_id').val();
+        fetchData(defaultUserId);
+        
+        // Event listener for select change
+         $('#user_id').on('change', function () {
+            var selectedUserId = $(this).val();
+            fetchData(selectedUserId);    
+        });
+
+       
+         $('#leave_type').on('change', function () {
+            var selectedLeaveTypeId = $("#leave_type").val();
+            fetchLeaveDue(selectedLeaveTypeId);
+        });
+
+
+        $('#from_date').on('change', function () {
+            calculateDateDifference();
+        });
+
+
+        $('#to_date').on('change', function () {
+            calculateDateDifference();          
+        });
+
+    });
+</script>
+
+<script>
+  function fetchData(selectedUserId) {
+    $.ajax({
+            type: 'GET',
+            url: '{{=URL("get_leave_type")}}' +"/"+ selectedUserId,
+            success: function (data) {
+                leaveData= data.leave_type
+                console.log(data.leave_type)
+                // Clear existing options in the select
+                $('#leave_type').empty();
+                $('#leave_due').empty();
+
+                for (var i = 0; i < data.leave_type.length; i++) {
+                    $('#leave_type').append('<option value="' + data.leave_type[i].id + '">' + data.leave_type[i].name + '</option>');
+                    $('#leave_due').append('<option value="' + data.leave_type[i].id + '">' + data.leave_type[i].leave_due + '</option>');
+                }
+
+              var selectedLeaveTypeId = $("#leave_type").val();
+              fetchLeaveDue(selectedLeaveTypeId);
+
+            
+              calculateDateDifference();
+        
+            },
+            error: function (error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+            
+  }
+
+  function fetchLeaveDue(selectedLeaveTypeId){
+
+      var selectedLeaveType = leaveData.find(function (leaveType) {
+                  return leaveType.id == selectedLeaveTypeId;
+              });
+
+              // Update the leave due value on the page
+              if (selectedLeaveType) {
+                  var leaveDue = selectedLeaveType.leave_due;
+                  $('#leave_due').val(leaveDue);
+                  calculateDateDifference();
+              } else {
+                  // Handle the case where the selected leave type is not found
+                  console.log('Selected leave type not found in data.leave_type.');
+              }
+
+  }
+
+  function calculateDateDifference(startDateString, endDateString){
+      var startDateString = $('#from_date').val();
+      var endDateString = $('#to_date').val();
+      var startDate = new Date(startDateString);
+      var endDate = new Date(endDateString);
+
+    // Calculate the difference in milliseconds
+      var differenceInMilliseconds = endDate - startDate;
+
+    // Convert the difference to days
+      var differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24)+1;
+
+    // Display the result
+      $('#leave_requested').val(differenceInDays);
+
+      var leaveDue = $('#leave_due').val();
+
+
+      if (parseInt(differenceInDays) > parseInt(leaveDue)) {
+        $('#warning').text('Insufficient leave balance. Please contact with administrator');
+    } else {
+      $('#warning').text('');
+   }
+
+  }
+
+</script>
+
+
